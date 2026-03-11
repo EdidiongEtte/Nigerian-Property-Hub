@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { mockProperties } from "@/lib/data/mock-properties";
+import { useAuth } from "@/lib/auth-context";
 import { 
   Building, 
   Heart, 
@@ -25,10 +26,13 @@ import PropertyCard from "@/components/property/PropertyCard";
 
 export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState("saved");
+  const [, setLocation] = useLocation();
+  const { user, logout, savedPropertyIds } = useAuth();
+  
+  // Real saved properties from context
+  const savedProperties = mockProperties.filter(p => savedPropertyIds.includes(p.id));
   
   // Mock data
-  const savedProperties = [mockProperties[0], mockProperties[3]];
-  
   const recentSearches = [
     { id: 1, query: "2 Bedroom in Lekki", time: "2 hours ago", link: "/" },
     { id: 2, query: "Houses in Abuja under ₦50m", time: "Yesterday", link: "/" },
@@ -39,6 +43,16 @@ export default function UserDashboard() {
     { id: 1, property: mockProperties[1], status: "Replied", date: "Today", message: "Yes, the service charge is included." },
     { id: 2, property: mockProperties[5], status: "Pending", date: "2 days ago", message: "Is this still available?" },
   ];
+
+  if (!user) {
+    setLocation("/login");
+    return null;
+  }
+
+  const handleLogout = () => {
+    logout();
+    setLocation("/");
+  };
 
   const NavLinks = () => (
     <>
@@ -69,11 +83,9 @@ export default function UserDashboard() {
         </TabsTrigger>
       </TabsList>
       <div className="mt-auto p-4 border-t border-slate-100">
-        <Link href="/">
-          <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50">
-            <LogOut className="h-5 w-5 mr-3" /> Sign Out
-          </Button>
-        </Link>
+        <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50">
+          <LogOut className="h-5 w-5 mr-3" /> Sign Out
+        </Button>
       </div>
     </>
   );
@@ -105,11 +117,11 @@ export default function UserDashboard() {
                 <div className="flex items-center gap-3 mb-6">
                   <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
                     <AvatarImage src="" />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">SO</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-bold">Samuel O.</h3>
-                    <p className="text-xs text-muted-foreground">Property Seeker</p>
+                    <h3 className="font-bold">{user.name}</h3>
+                    <p className="text-xs text-muted-foreground capitalize">Property {user.type}</p>
                   </div>
                 </div>
               </div>
@@ -136,11 +148,11 @@ export default function UserDashboard() {
           <div className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm border border-slate-100">
             <Avatar className="h-10 w-10 border-2 border-slate-50">
               <AvatarImage src="" />
-              <AvatarFallback className="bg-primary/10 text-primary font-bold">SO</AvatarFallback>
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="overflow-hidden">
-              <h3 className="font-bold text-sm truncate">Samuel O.</h3>
-              <p className="text-xs text-muted-foreground">Property Seeker</p>
+              <h3 className="font-bold text-sm truncate">{user.name}</h3>
+              <p className="text-xs text-muted-foreground capitalize">Property {user.type}</p>
             </div>
             <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-slate-400 hover:text-primary relative">
               <Bell className="h-4 w-4" />
@@ -176,15 +188,7 @@ export default function UserDashboard() {
             {savedProperties.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {savedProperties.map(property => (
-                  <div key={property.id} className="relative group">
-                    <PropertyCard property={property} />
-                    <Button 
-                      size="icon" 
-                      className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white shadow-md text-red-500 hover:bg-red-50 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Heart className="h-4 w-4 fill-current" />
-                    </Button>
-                  </div>
+                  <PropertyCard key={property.id} property={property} />
                 ))}
               </div>
             ) : (
@@ -289,7 +293,7 @@ export default function UserDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Full Name</Label>
-                      <Input defaultValue="Samuel O." />
+                      <Input defaultValue={user.name} />
                     </div>
                     <div className="space-y-2">
                       <Label>Email</Label>

@@ -1,18 +1,29 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Building, Mail, Lock, User, Briefcase } from "lucide-react";
+import { Building, Mail, Lock, User as UserIcon, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useAuth, User } from "@/lib/auth-context";
 
 export default function Login() {
   const [, setLocation] = useLocation();
+  const { login } = useAuth();
   const [accountType, setAccountType] = useState<'seeker' | 'business'>('seeker');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Create a mock user depending on the selected tab
+    const newUser: User = {
+      id: Math.random().toString(36).substring(7),
+      name: "Demo User",
+      type: accountType === 'seeker' ? 'buyer' : 'agent'
+    };
+    login(newUser);
+    
     if (accountType === 'seeker') {
       setLocation("/account");
     } else {
@@ -39,7 +50,7 @@ export default function Login() {
           <div className="px-6 pt-6">
             <TabsList className="grid w-full grid-cols-2 h-12 bg-slate-100/80">
               <TabsTrigger value="seeker" className="font-semibold gap-2">
-                <User className="h-4 w-4" /> Buyer / Renter
+                <UserIcon className="h-4 w-4" /> Buyer / Renter
               </TabsTrigger>
               <TabsTrigger value="business" className="font-semibold gap-2">
                 <Briefcase className="h-4 w-4" /> Agent / Landlord

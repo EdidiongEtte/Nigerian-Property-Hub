@@ -6,14 +6,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useAuth, User } from "@/lib/auth-context";
 
 export default function Signup() {
   const [, setLocation] = useLocation();
+  const { login } = useAuth();
+  
   const [userType, setUserType] = useState<'seeker' | 'lister'>('seeker');
   const [role, setRole] = useState<'buyer' | 'renter' | 'landlord' | 'agent' | null>(null);
+  const [name, setName] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!role) return;
+    
+    // Log user in using mock auth context
+    const newUser: User = {
+      id: Math.random().toString(36).substring(7),
+      name: name || "User",
+      type: role
+    };
+    login(newUser);
+    
     if (role === 'buyer' || role === 'renter') {
       setLocation("/account");
     } else {
@@ -110,7 +124,7 @@ export default function Signup() {
 
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="John Doe" required className="h-12" />
+                <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" required className="h-12" />
               </div>
 
               <div className="space-y-2">

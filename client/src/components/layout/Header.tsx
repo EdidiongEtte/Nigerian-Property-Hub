@@ -34,10 +34,19 @@ export default function Header() {
             <Search className="h-5 w-5" />
           </Button>
           
-          <Button variant="outline" className="hidden sm:flex gap-2 font-semibold">
-            <UserCircle className="h-5 w-5" />
-            Sign In
-          </Button>
+          <Link href="/login" className="hidden sm:block">
+            <Button variant="outline" className="flex gap-2 font-semibold">
+              <UserCircle className="h-5 w-5" />
+              Sign In
+            </Button>
+          </Link>
+          
+          {/* For mobile, small sign in button */}
+          <Link href="/login" className="sm:hidden">
+            <Button variant="ghost" size="icon" aria-label="Sign In">
+              <UserCircle className="h-5 w-5 text-slate-700" />
+            </Button>
+          </Link>
           
           <Link href="/post-listing">
             <Button className="gap-2 font-semibold shadow-sm hover:shadow-md transition-shadow cursor-pointer">

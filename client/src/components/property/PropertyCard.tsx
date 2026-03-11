@@ -14,8 +14,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <Link href={`/property/${property.id}`}>
-      <Card className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-lg border-slate-200">
-        <div className="relative aspect-[4/3] overflow-hidden">
+      <Card className="group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-lg border-slate-200 h-full flex flex-col">
+        <div className="relative aspect-[4/3] overflow-hidden shrink-0">
           <img 
             src={property.images[0]} 
             alt={property.title} 
@@ -38,7 +38,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
         </div>
         
-        <CardContent className="p-5">
+        <CardContent className="p-5 flex flex-col flex-1">
           <div className="mb-2 flex items-center justify-between">
             <p className="font-heading font-bold text-2xl text-primary">
               {property.currency}{formattedPrice}
@@ -50,12 +50,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             {property.title}
           </h3>
           
-          <div className="flex items-center text-muted-foreground text-sm mb-4">
-            <MapPin className="h-4 w-4 mr-1 shrink-0" />
-            <span className="line-clamp-1">{property.location.address}, {property.location.city}, {property.location.state}</span>
+          <div className="flex items-start text-muted-foreground text-sm mb-4">
+            <MapPin className="h-4 w-4 mr-1 mt-0.5 shrink-0" />
+            <span className="line-clamp-2">{property.location.area}, {property.location.city}</span>
           </div>
           
-          <div className="flex items-center gap-4 text-sm text-slate-600 border-t border-slate-100 pt-4">
+          <div className="mt-auto flex items-center gap-4 text-sm text-slate-600 border-t border-slate-100 pt-4">
             <div className="flex items-center gap-1.5" title="Bedrooms">
               <Bed className="h-4 w-4 text-slate-400" />
               <span className="font-medium">{property.features.bedrooms}</span>

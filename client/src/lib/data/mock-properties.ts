@@ -15,8 +15,11 @@ export interface Property {
   propertyType: 'Apartment' | 'House' | 'Duplex' | 'Land' | 'Commercial';
   location: {
     address: string;
+    area: string;
     city: string;
     state: string;
+    lat: number;
+    lng: number;
   };
   features: {
     bedrooms: number;
@@ -44,9 +47,12 @@ export const mockProperties: Property[] = [
     type: 'sale',
     propertyType: 'Duplex',
     location: {
-      address: 'Lekki Phase 1',
-      city: 'Lekki',
+      address: 'Admiralty Way',
+      area: 'Lekki Phase 1',
+      city: 'Lagos',
       state: 'Lagos',
+      lat: 6.4474,
+      lng: 3.4723,
     },
     features: {
       bedrooms: 4,
@@ -73,9 +79,12 @@ export const mockProperties: Property[] = [
     type: 'rent',
     propertyType: 'Apartment',
     location: {
-      address: 'Victoria Island',
-      city: 'VI',
+      address: 'Adeola Odeku Street',
+      area: 'Victoria Island',
+      city: 'Lagos',
       state: 'Lagos',
+      lat: 6.4300,
+      lng: 3.4180,
     },
     features: {
       bedrooms: 2,
@@ -99,9 +108,12 @@ export const mockProperties: Property[] = [
     type: 'sale',
     propertyType: 'House',
     location: {
-      address: 'Maitama District',
-      city: 'Maitama',
-      state: 'Abuja',
+      address: 'Gana Street',
+      area: 'Maitama',
+      city: 'Abuja',
+      state: 'FCT',
+      lat: 9.0833,
+      lng: 7.4950,
     },
     features: {
       bedrooms: 5,
@@ -127,9 +139,12 @@ export const mockProperties: Property[] = [
     type: 'rent',
     propertyType: 'Apartment',
     location: {
-      address: 'GRA Phase 2',
+      address: 'Tombia Street',
+      area: 'GRA Phase 2',
       city: 'Port Harcourt',
       state: 'Rivers',
+      lat: 4.8156,
+      lng: 7.0050,
     },
     features: {
       bedrooms: 3,
@@ -152,9 +167,12 @@ export const mockProperties: Property[] = [
     type: 'sale',
     propertyType: 'House',
     location: {
-      address: 'Ewet Housing Estate',
+      address: 'Aka Road',
+      area: 'Ewet Housing Estate',
       city: 'Uyo',
       state: 'Akwa Ibom',
+      lat: 5.0389,
+      lng: 7.9095,
     },
     features: {
       bedrooms: 4,
@@ -179,9 +197,12 @@ export const mockProperties: Property[] = [
     type: 'rent',
     propertyType: 'Apartment',
     location: {
-      address: 'Yaba',
-      city: 'Yaba',
+      address: 'Herbert Macaulay Way',
+      area: 'Yaba',
+      city: 'Lagos',
       state: 'Lagos',
+      lat: 6.5147,
+      lng: 3.3828,
     },
     features: {
       bedrooms: 1,

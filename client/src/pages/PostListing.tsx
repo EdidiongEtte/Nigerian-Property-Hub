@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UploadCloud, Image as ImageIcon, X, MapPin, Tag, List, CheckCircle2, Building, Bed, Bath, Grid2X2 } from "lucide-react";
+import { UploadCloud, Image as ImageIcon, X, MapPin, Tag, List, CheckCircle2, Bed, Bath, Grid2X2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cityAreas, statesAndCities } from "@/lib/data/locations";
 
 export default function PostListing() {
   const [step, setStep] = useState(1);
@@ -18,6 +19,10 @@ export default function PostListing() {
   const { toast } = useToast();
   
   const [images, setImages] = useState<string[]>([]);
+  
+  // Location states
+  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
 
   const handleNext = () => setStep(s => Math.min(s + 1, 3));
   const handlePrev = () => setStep(s => Math.max(s - 1, 1));
@@ -43,6 +48,9 @@ export default function PostListing() {
   const handleRemoveImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
   };
+
+  const citiesForState = selectedState ? statesAndCities[selectedState as keyof typeof statesAndCities] || [] : [];
+  const areasForCity = selectedCity ? cityAreas[selectedCity] || [] : [];
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -149,27 +157,53 @@ export default function PostListing() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-3">
                         <Label htmlFor="state">State <span className="text-red-500">*</span></Label>
-                        <Select required>
+                        <Select value={selectedState} onValueChange={(val) => { setSelectedState(val); setSelectedCity(""); }} required>
                           <SelectTrigger className="h-12">
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="lagos">Lagos</SelectItem>
-                            <SelectItem value="abuja">Abuja (FCT)</SelectItem>
-                            <SelectItem value="rivers">Rivers</SelectItem>
-                            <SelectItem value="akwa-ibom">Akwa Ibom</SelectItem>
-                            <SelectItem value="oyo">Oyo</SelectItem>
+                            {Object.keys(statesAndCities).map(state => (
+                              <SelectItem key={state} value={state}>{state}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-3">
-                        <Label htmlFor="city">City / Area <span className="text-red-500">*</span></Label>
-                        <Input id="city" placeholder="e.g. Lekki Phase 1" className="h-12" required />
+                        <Label htmlFor="city">City <span className="text-red-500">*</span></Label>
+                        <Select value={selectedCity} onValueChange={setSelectedCity} disabled={!selectedState} required>
+                          <SelectTrigger className="h-12 disabled:opacity-50">
+                            <SelectValue placeholder={selectedState ? "Select city" : "Select state first"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {citiesForState.map((city: string) => (
+                              <SelectItem key={city} value={city}>{city}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="address">Full Address</Label>
-                      <Input id="address" placeholder="e.g. 12 Admiralty Way" className="h-12" />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <Label htmlFor="area">Area / Neighborhood <span className="text-red-500">*</span></Label>
+                        <Select disabled={!selectedCity} required>
+                          <SelectTrigger className="h-12 disabled:opacity-50">
+                            <SelectValue placeholder={selectedCity ? "Select area" : "Select city first"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {areasForCity.map((area: string) => (
+                              <SelectItem key={area} value={area}>{area}</SelectItem>
+                            ))}
+                            {areasForCity.length === 0 && selectedCity && (
+                               <SelectItem value="other">Other Area</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-3">
+                        <Label htmlFor="address">Street Address</Label>
+                        <Input id="address" placeholder="e.g. 12 Admiralty Way" className="h-12" />
+                      </div>
                     </div>
                   </div>
 

@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MapPin, Bed, Bath, Grid2X2, Phone, Mail, CheckCircle2, ChevronLeft, Share2, Heart, ShieldCheck } from "lucide-react";
+import { MapPin, Bed, Bath, Grid2X2, Phone, Mail, CheckCircle2, ChevronLeft, Share2, Heart, ShieldCheck, Map as MapIcon } from "lucide-react";
 import { Link } from "wouter";
 
 export default function PropertyDetails() {
@@ -29,6 +29,14 @@ export default function PropertyDetails() {
   }
 
   const formattedPrice = new Intl.NumberFormat('en-NG').format(property.price);
+  
+  // Calculate a bounding box for the map to show context
+  const bbox = {
+    minLng: property.location.lng - 0.005,
+    minLat: property.location.lat - 0.005,
+    maxLng: property.location.lng + 0.005,
+    maxLat: property.location.lat + 0.005,
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -56,7 +64,7 @@ export default function PropertyDetails() {
           {/* Left Column - Property Details */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Image Gallery (Simplified for mockup) */}
+            {/* Image Gallery */}
             <div className="grid grid-cols-4 gap-2 rounded-2xl overflow-hidden shadow-sm h-[400px] md:h-[500px]">
               <div className="col-span-4 md:col-span-3 row-span-2 relative group cursor-pointer">
                 <img 
@@ -90,16 +98,16 @@ export default function PropertyDetails() {
                     <Badge variant="outline" className="text-slate-600 bg-slate-50 border-slate-200">
                       {property.propertyType}
                     </Badge>
-                    <span className="text-sm text-muted-foreground flex items-center">
+                    <span className="text-sm font-semibold text-primary flex items-center bg-primary/10 px-2 py-1 rounded-md">
                       <MapPin className="h-4 w-4 mr-1" />
-                      {property.location.city}, {property.location.state}
+                      {property.location.area}, {property.location.city}
                     </span>
                   </div>
                   <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground leading-tight">
                     {property.title}
                   </h1>
-                  <p className="text-muted-foreground mt-2 text-lg">
-                    {property.location.address}
+                  <p className="text-muted-foreground mt-2 text-lg flex items-center">
+                    {property.location.address}, {property.location.state}
                   </p>
                 </div>
                 <div className="text-left md:text-right shrink-0">
@@ -153,7 +161,35 @@ export default function PropertyDetails() {
               </div>
             </div>
 
-            {/* Amenities (Placeholder) */}
+            {/* Map Section */}
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-heading font-bold flex items-center gap-2">
+                  <MapIcon className="h-5 w-5 text-primary" /> Location Map
+                </h2>
+                <Badge variant="outline" className="text-slate-500">
+                  {property.location.area}, {property.location.city}
+                </Badge>
+              </div>
+              <div className="rounded-xl overflow-hidden border border-slate-200 h-[300px] md:h-[400px] bg-slate-100 relative">
+                {/* Embedded OpenStreetMap Iframe */}
+                <iframe 
+                  width="100%" 
+                  height="100%" 
+                  frameBorder="0" 
+                  scrolling="no" 
+                  marginHeight={0} 
+                  marginWidth={0} 
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox.minLng}%2C${bbox.minLat}%2C${bbox.maxLng}%2C${bbox.maxLat}&layer=mapnik&marker=${property.location.lat}%2C${property.location.lng}`}
+                  className="w-full h-full"
+                ></iframe>
+                <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm text-xs font-medium text-slate-600 border border-slate-200">
+                  Exact location may be approximate for privacy
+                </div>
+              </div>
+            </div>
+
+            {/* Amenities */}
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
               <h2 className="text-xl font-heading font-bold mb-4">Features & Amenities</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4">

@@ -14,6 +14,7 @@ import Dashboard from "@/pages/Dashboard";
 import UserDashboard from "@/pages/UserDashboard";
 import Pricing from "@/pages/Pricing";
 import Verification from "@/pages/Verification";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 function Router() {
   return (
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/account" component={UserDashboard} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/verification" component={Verification} />
+      <Route path="/admin" component={AdminDashboard} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

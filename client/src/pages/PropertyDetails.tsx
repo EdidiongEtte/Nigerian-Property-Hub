@@ -5,12 +5,15 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MapPin, Bed, Bath, Grid2X2, Phone, Mail, CheckCircle2, ChevronLeft, Share2, Heart, ShieldCheck, Map as MapIcon } from "lucide-react";
+import { MapPin, Bed, Bath, Grid2X2, Phone, Mail, CheckCircle2, ChevronLeft, Share2, Heart, ShieldCheck, Map as MapIcon, Flag, Clock } from "lucide-react";
 import { Link } from "wouter";
+import { useState } from "react";
+import { ReportDialog } from "@/components/trust/ReportDialog";
 
 export default function PropertyDetails() {
   const { id } = useParams<{ id: string }>();
   const property = mockProperties.find(p => p.id === id);
+  const [reportOpen, setReportOpen] = useState(false);
 
   if (!property) {
     return (
@@ -91,8 +94,14 @@ export default function PropertyDetails() {
             </div>
 
             {/* Title & Price */}
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+              {property.agent.verified && (
+                <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-4 py-1 rounded-bl-xl flex items-center gap-1 shadow-sm">
+                  <ShieldCheck className="h-3 w-3" /> VERIFIED LISTING
+                </div>
+              )}
+              
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4 mt-2">
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Badge variant="outline" className="text-slate-600 bg-slate-50 border-slate-200">
@@ -106,9 +115,15 @@ export default function PropertyDetails() {
                   <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground leading-tight">
                     {property.title}
                   </h1>
-                  <p className="text-muted-foreground mt-2 text-lg flex items-center">
-                    {property.location.address}, {property.location.state}
-                  </p>
+                  <div className="flex items-center gap-4 mt-3">
+                    <p className="text-muted-foreground flex items-center">
+                      {property.location.address}, {property.location.state}
+                    </p>
+                    <div className="h-4 w-px bg-slate-300"></div>
+                    <p className="text-sm text-slate-500 flex items-center gap-1.5 font-medium">
+                      <Clock className="h-4 w-4" /> Updated 2 days ago
+                    </p>
+                  </div>
                 </div>
                 <div className="text-left md:text-right shrink-0">
                   <p className="text-3xl md:text-4xl font-heading font-bold text-primary">
@@ -190,7 +205,7 @@ export default function PropertyDetails() {
             </div>
 
             {/* Amenities */}
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 mb-8">
               <h2 className="text-xl font-heading font-bold mb-4">Features & Amenities</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4">
                 {['Running Water', '24/7 Security', 'Ample Parking', 'Fenced Compound', 'Prepaid Meter', 'Good Road Network'].map(amenity => (
@@ -200,6 +215,17 @@ export default function PropertyDetails() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Report section below content */}
+            <div className="flex justify-center mt-8 mb-12">
+              <Button 
+                variant="ghost" 
+                className="text-slate-400 hover:text-red-600 hover:bg-red-50 text-sm font-medium gap-2"
+                onClick={() => setReportOpen(true)}
+              >
+                <Flag className="h-4 w-4" /> Report this listing
+              </Button>
             </div>
 
           </div>
@@ -212,15 +238,17 @@ export default function PropertyDetails() {
               <h3 className="font-heading font-bold text-lg mb-6">Listed By</h3>
               
               <div className="flex items-center gap-4 mb-6">
-                <div className="h-16 w-16 rounded-full bg-slate-200 overflow-hidden shrink-0 border-2 border-white shadow-sm flex items-center justify-center text-xl font-bold text-slate-500">
+                <div className="h-16 w-16 rounded-full bg-slate-100 overflow-hidden shrink-0 border-2 border-white shadow-sm flex items-center justify-center text-xl font-bold text-slate-500 relative">
                   {property.agent.name.charAt(0)}
+                  {property.agent.verified && (
+                    <div className="absolute bottom-0 right-0 bg-white rounded-full">
+                      <CheckCircle2 className="h-5 w-5 text-primary fill-white" />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h4 className="font-bold text-lg flex items-center gap-1">
                     {property.agent.name}
-                    {property.agent.verified && (
-                      <CheckCircle2 className="h-4 w-4 text-primary" title="Verified Agent" />
-                    )}
                   </h4>
                   {property.agent.agency ? (
                     <p className="text-sm text-muted-foreground">{property.agent.agency}</p>
@@ -230,10 +258,18 @@ export default function PropertyDetails() {
                 </div>
               </div>
 
-              {property.agent.verified && (
-                <div className="bg-green-50 text-green-800 text-sm p-3 rounded-lg flex items-start gap-2 mb-6 border border-green-100">
-                  <ShieldCheck className="h-5 w-5 shrink-0 text-green-600" />
-                  <p>This agent has been verified by NaijaHomes with a valid government ID.</p>
+              {property.agent.verified ? (
+                <div className="bg-green-50 text-green-800 text-sm p-4 rounded-xl flex items-start gap-3 mb-6 border border-green-100 shadow-sm">
+                  <ShieldCheck className="h-6 w-6 shrink-0 text-green-600 mt-0.5" />
+                  <div>
+                    <p className="font-semibold mb-1">Identity Verified</p>
+                    <p className="text-xs text-green-700/80 leading-relaxed">This agent has been verified by NaijaHomes using a valid government ID or CAC document.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-50 text-slate-600 text-sm p-3 rounded-xl flex items-start gap-2 mb-6 border border-slate-100">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+                  <p className="text-xs">This agent has not completed identity verification. Proceed with caution.</p>
                 </div>
               )}
 
@@ -249,7 +285,8 @@ export default function PropertyDetails() {
                 </Button>
               </div>
 
-              <div className="text-center text-xs text-muted-foreground mt-4 pt-4 border-t border-slate-100">
+              <div className="text-center text-xs text-muted-foreground mt-4 pt-4 border-t border-slate-100 bg-orange-50/50 p-3 rounded-lg border border-orange-100">
+                <p className="font-semibold text-orange-800 mb-1">Stay Safe</p>
                 <p>Never pay money before physical inspection. Be careful of scams.</p>
               </div>
             </Card>
@@ -259,6 +296,12 @@ export default function PropertyDetails() {
       </main>
 
       <Footer />
+      
+      <ReportDialog 
+        open={reportOpen} 
+        onOpenChange={setReportOpen} 
+        propertyTitle={property.title} 
+      />
     </div>
   );
 }

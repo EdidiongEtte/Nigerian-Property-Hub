@@ -347,8 +347,12 @@ export default function Dashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm mb-4">Your account is fully verified. Buyers and renters are more likely to trust verified agents.</p>
-                    <Badge className="bg-primary">Verified Agent</Badge>
+                    <p className="text-sm mb-4">Your account is not fully verified yet. Buyers and renters are more likely to trust verified agents.</p>
+                    <Link href="/verification">
+                      <Button variant="outline" className="w-full font-bold border-primary text-primary hover:bg-primary/10">
+                        Get Verified
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
                 

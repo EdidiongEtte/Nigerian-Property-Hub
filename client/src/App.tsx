@@ -13,6 +13,7 @@ import Signup from "@/pages/Signup";
 import Dashboard from "@/pages/Dashboard";
 import UserDashboard from "@/pages/UserDashboard";
 import Pricing from "@/pages/Pricing";
+import Verification from "@/pages/Verification";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/account" component={UserDashboard} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/verification" component={Verification} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

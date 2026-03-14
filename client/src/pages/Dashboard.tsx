@@ -177,9 +177,11 @@ export default function Dashboard() {
                     <p className="text-white/80 font-medium mb-1">Want more leads?</p>
                     <p className="font-bold">Boost your properties</p>
                   </div>
-                  <Button variant="secondary" className="font-bold text-primary border-0 rounded-xl shadow-lg">
-                    Upgrade
-                  </Button>
+                  <Link href="/pricing">
+                    <Button variant="secondary" className="font-bold text-primary border-0 rounded-xl shadow-lg">
+                      Upgrade
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </div>

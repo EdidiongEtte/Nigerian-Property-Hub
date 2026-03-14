@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { 
   Building, 
@@ -24,35 +24,26 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { useMockDb } from "@/lib/mock-db";
 
-// Mock Data
+// Mock Listings Data
 const initialListings = [
   { id: "L1", title: "Luxury 5 Bed Duplex", agent: "Chidi Okafor", price: "₦150,000,000", location: "Lekki Phase 1, Lagos", status: "pending", date: "2 hours ago" },
   { id: "L2", title: "Affordable 2 Bed Flat", agent: "Amina Bello", price: "₦1,200,000/yr", location: "Yaba, Lagos", status: "pending", date: "5 hours ago" },
   { id: "L3", title: "Commercial Office Space", agent: "Properties Ltd", price: "₦5,000,000/yr", location: "Wuse 2, Abuja", status: "pending", date: "1 day ago" },
 ];
 
-const initialVerifications = [
-  { id: "V1", name: "Oluwaseun Adewale", type: "Agent", documents: ["NIN Slip", "CAC Certificate"], status: "pending", date: "3 hours ago" },
-  { id: "V2", name: "Grace Ekpenyong", type: "Landlord", documents: ["Driver's License"], status: "pending", date: "Yesterday" },
-  { id: "V3", name: "Adeola Properties", type: "Agency", documents: ["International Passport", "CAC Certificate"], status: "pending", date: "2 days ago" },
-];
-
-const initialReports = [
-  { id: "R1", property: "3 Bedroom Flat in Ikeja", agent: "John Doe", reason: "Suspected Scam", details: "Asked for inspection fee before viewing.", status: "open", date: "1 hour ago", reporter: "Anonymous" },
-  { id: "R2", property: "Self Contain in Surulere", agent: "Jane Smith", reason: "Unavailable", details: "Agent says property is already rented but still listed.", status: "open", date: "4 hours ago", reporter: "User123" },
-  { id: "R3", property: "Luxury Villa Asokoro", agent: "Abuja Homes", reason: "Fake Photos", details: "These photos are from a different listing in Dubai.", status: "open", date: "1 day ago", reporter: "Anonymous" },
-];
-
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
+  const { reports, verifications, updateReportStatus, updateVerificationStatus, addNotification } = useMockDb();
 
   const [listings, setListings] = useState(initialListings);
-  const [verifications, setVerifications] = useState(initialVerifications);
-  const [reports, setReports] = useState(initialReports);
+  
+  const openReports = reports.filter(r => r.status === 'open');
+  const pendingVerifications = verifications.filter(v => v.status === 'pending');
 
-  const handleAction = (type: string, id: string, action: string) => {
+  const handleAction = (type: string, id: string, action: string, userId?: string) => {
     toast({
       title: `${action} Successful`,
       description: `Action applied to ${type} ${id}.`,
@@ -61,9 +52,45 @@ export default function AdminDashboard() {
     if (type === 'listing') {
       setListings(listings.filter(l => l.id !== id));
     } else if (type === 'verification') {
-      setVerifications(verifications.filter(v => v.id !== id));
+      if (action === 'Verified') {
+        updateVerificationStatus(id, 'verified');
+        if (userId) {
+          addNotification({
+            userId,
+            title: "Verification Approved",
+            message: "Your account has been successfully verified! You will now have a verified badge on your listings.",
+            type: "success"
+          });
+        }
+      } else if (action === 'Rejected') {
+        updateVerificationStatus(id, 'rejected');
+        if (userId) {
+          addNotification({
+            userId,
+            title: "Verification Rejected",
+            message: "Your verification request was rejected. Please review your documents and try again.",
+            type: "error"
+          });
+        }
+      }
     } else if (type === 'report') {
-      setReports(reports.filter(r => r.id !== id));
+      updateReportStatus(id, 'resolved');
+      
+      if (action === 'Agent Warned' && userId) {
+         addNotification({
+            userId,
+            title: "Account Warning",
+            message: "A user reported one of your listings. Please ensure all information is accurate and responses are professional.",
+            type: "warning"
+         });
+      } else if (action === 'Listing Banned' && userId) {
+         addNotification({
+            userId,
+            title: "Listing Removed",
+            message: "One of your listings was removed due to multiple community reports.",
+            type: "error"
+         });
+      }
     }
   };
 
@@ -79,11 +106,11 @@ export default function AdminDashboard() {
         </TabsTrigger>
         <TabsTrigger value="verifications" className="w-full justify-start px-4 py-3 h-12 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-xl">
           <ShieldAlert className="h-5 w-5 mr-3" /> Verifications
-          {verifications.length > 0 && <Badge className="ml-auto bg-blue-500 hover:bg-blue-600">{verifications.length}</Badge>}
+          {pendingVerifications.length > 0 && <Badge className="ml-auto bg-blue-500 hover:bg-blue-600">{pendingVerifications.length}</Badge>}
         </TabsTrigger>
         <TabsTrigger value="reports" className="w-full justify-start px-4 py-3 h-12 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-xl">
           <Flag className="h-5 w-5 mr-3" /> Complaints
-          {reports.length > 0 && <Badge className="ml-auto bg-red-500 hover:bg-red-600">{reports.length}</Badge>}
+          {openReports.length > 0 && <Badge className="ml-auto bg-red-500 hover:bg-red-600">{openReports.length}</Badge>}
         </TabsTrigger>
         <TabsTrigger value="users" className="w-full justify-start px-4 py-3 h-12 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-xl">
           <Users className="h-5 w-5 mr-3" /> Users Directory
@@ -147,7 +174,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" className="rounded-full relative">
               <AlertTriangle className="h-4 w-4 text-slate-600" />
-              {(reports.length + verifications.length + listings.length) > 0 && (
+              {(openReports.length + pendingVerifications.length + listings.length) > 0 && (
                 <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
               )}
             </Button>
@@ -192,7 +219,7 @@ export default function AdminDashboard() {
                     </div>
                     <h3 className="text-slate-500 font-medium text-sm">Pending Verifications</h3>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <h2 className="text-3xl font-bold text-slate-900">{verifications.length}</h2>
+                      <h2 className="text-3xl font-bold text-slate-900">{pendingVerifications.length}</h2>
                       <span className="text-sm text-slate-400">applications</span>
                     </div>
                   </CardContent>
@@ -208,7 +235,7 @@ export default function AdminDashboard() {
                     </div>
                     <h3 className="text-slate-500 font-medium text-sm">Open Complaints</h3>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <h2 className="text-3xl font-bold text-slate-900">{reports.length}</h2>
+                      <h2 className="text-3xl font-bold text-slate-900">{openReports.length}</h2>
                       <span className="text-sm text-slate-400">unresolved</span>
                     </div>
                   </CardContent>
@@ -242,7 +269,7 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="divide-y divide-slate-100">
-                      {reports.slice(0, 3).map(report => (
+                      {openReports.slice(0, 3).map(report => (
                         <div key={report.id} className="p-4 hover:bg-slate-50 flex items-start gap-4">
                           <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                             <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -252,10 +279,10 @@ export default function AdminDashboard() {
                             <p className="text-xs text-slate-500 truncate mt-1">Re: {report.property}</p>
                             <p className="text-xs font-medium text-slate-700 mt-2">{report.details}</p>
                           </div>
-                          <span className="text-xs text-slate-400 shrink-0">{report.date}</span>
+                          <span className="text-xs text-slate-400 shrink-0">{new Date(report.date).toLocaleDateString()}</span>
                         </div>
                       ))}
-                      {reports.length === 0 && (
+                      {openReports.length === 0 && (
                         <div className="p-8 text-center text-slate-500">No open complaints! Great job.</div>
                       )}
                     </div>
@@ -272,7 +299,7 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="divide-y divide-slate-100">
-                      {verifications.slice(0, 3).map(v => (
+                      {pendingVerifications.slice(0, 3).map(v => (
                         <div key={v.id} className="p-4 hover:bg-slate-50 flex items-center gap-4">
                           <Avatar className="h-10 w-10">
                             <AvatarFallback className="bg-blue-100 text-blue-700">{v.name.charAt(0)}</AvatarFallback>
@@ -286,16 +313,16 @@ export default function AdminDashboard() {
                             </p>
                           </div>
                           <div className="flex gap-2">
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleAction('verification', v.id, 'Approved')}>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleAction('verification', v.id, 'Verified', v.userId)}>
                               <CheckCircle2 className="h-5 w-5" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleAction('verification', v.id, 'Rejected')}>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleAction('verification', v.id, 'Rejected', v.userId)}>
                               <XCircle className="h-5 w-5" />
                             </Button>
                           </div>
                         </div>
                       ))}
-                      {verifications.length === 0 && (
+                      {pendingVerifications.length === 0 && (
                         <div className="p-8 text-center text-slate-500">No pending verifications.</div>
                       )}
                     </div>
@@ -409,16 +436,24 @@ export default function AdminDashboard() {
                               ))}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-slate-500">{v.date}</td>
+                          <td className="px-6 py-4 text-slate-500">
+                            {new Date(v.date).toLocaleDateString()}
+                          </td>
                           <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button variant="default" size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white font-medium" onClick={() => handleAction('verification', v.id, 'Verified')}>
-                                Verify
-                              </Button>
-                              <Button variant="destructive" size="sm" className="h-8 font-medium" onClick={() => handleAction('verification', v.id, 'Rejected')}>
-                                Reject
-                              </Button>
-                            </div>
+                            {v.status === 'pending' ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <Button variant="default" size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white font-medium" onClick={() => handleAction('verification', v.id, 'Verified', v.userId)}>
+                                  Verify
+                                </Button>
+                                <Button variant="destructive" size="sm" className="h-8 font-medium" onClick={() => handleAction('verification', v.id, 'Rejected', v.userId)}>
+                                  Reject
+                                </Button>
+                              </div>
+                            ) : (
+                              <Badge variant={v.status === 'verified' ? 'default' : 'destructive'} className={v.status === 'verified' ? 'bg-green-500' : ''}>
+                                {v.status.toUpperCase()}
+                              </Badge>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -427,7 +462,7 @@ export default function AdminDashboard() {
                           <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                             <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3 opacity-50" />
                             <p className="text-lg font-medium">Queue is empty</p>
-                            <p className="text-sm">No pending verification requests.</p>
+                            <p className="text-sm">No verification requests found.</p>
                           </td>
                         </tr>
                       )}
@@ -448,18 +483,21 @@ export default function AdminDashboard() {
 
               <div className="space-y-4">
                 {reports.map(report => (
-                  <Card key={report.id} className="border-red-100 shadow-sm rounded-xl overflow-hidden bg-white">
+                  <Card key={report.id} className={`shadow-sm rounded-xl overflow-hidden bg-white ${report.status === 'open' ? 'border-red-100' : 'border-slate-200 opacity-70'}`}>
                     <div className="p-5 flex flex-col md:flex-row gap-6">
-                      <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center shrink-0">
-                        <Flag className="h-6 w-6 text-red-500" />
+                      <div className={`h-12 w-12 rounded-full flex items-center justify-center shrink-0 ${report.status === 'open' ? 'bg-red-50' : 'bg-slate-100'}`}>
+                        <Flag className={`h-6 w-6 ${report.status === 'open' ? 'text-red-500' : 'text-slate-400'}`} />
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <Badge variant="destructive" className="mb-2">{report.reason}</Badge>
+                            <div className="flex items-center gap-2 mb-2">
+                                <Badge variant={report.status === 'open' ? 'destructive' : 'secondary'}>{report.reason}</Badge>
+                                {report.status === 'resolved' && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Resolved</Badge>}
+                            </div>
                             <h3 className="font-bold text-lg text-slate-900">{report.property}</h3>
                           </div>
-                          <span className="text-sm text-slate-500">{report.date}</span>
+                          <span className="text-sm text-slate-500">{new Date(report.date).toLocaleDateString()}</span>
                         </div>
                         
                         <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 mb-4">
@@ -470,20 +508,22 @@ export default function AdminDashboard() {
                         <div className="text-sm text-slate-600 flex items-center gap-2 mb-4">
                           <span className="font-medium text-slate-800">Accused Agent:</span> 
                           <Avatar className="h-6 w-6"><AvatarFallback>{report.agent.charAt(0)}</AvatarFallback></Avatar>
-                          {report.agent}
+                          {report.agent} {report.agentId ? `(ID: ${report.agentId})` : ''}
                         </div>
                         
-                        <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
-                          <Button variant="destructive" size="sm" className="font-medium" onClick={() => handleAction('report', report.id, 'Listing Banned')}>
-                            Remove Listing
-                          </Button>
-                          <Button variant="outline" size="sm" className="border-orange-200 text-orange-700 hover:bg-orange-50 font-medium" onClick={() => handleAction('report', report.id, 'Agent Warned')}>
-                            Warn Agent
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-slate-500 ml-auto" onClick={() => handleAction('report', report.id, 'Report Dismissed')}>
-                            Dismiss Report
-                          </Button>
-                        </div>
+                        {report.status === 'open' && (
+                          <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
+                            <Button variant="destructive" size="sm" className="font-medium" onClick={() => handleAction('report', report.id, 'Listing Banned', report.agentId)}>
+                              Remove Listing
+                            </Button>
+                            <Button variant="outline" size="sm" className="border-orange-200 text-orange-700 hover:bg-orange-50 font-medium" onClick={() => handleAction('report', report.id, 'Agent Warned', report.agentId)}>
+                              Warn Agent
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-slate-500 ml-auto" onClick={() => handleAction('report', report.id, 'Report Dismissed')}>
+                              Dismiss Report
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </Card>

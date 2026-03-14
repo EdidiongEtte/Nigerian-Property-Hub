@@ -6,18 +6,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertTriangle, Flag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMockDb } from "@/lib/mock-db";
+import { useAuth } from "@/lib/auth-context";
 
 interface ReportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   propertyTitle: string;
+  agentName?: string;
+  agentId?: string;
 }
 
-export function ReportDialog({ open, onOpenChange, propertyTitle }: ReportDialogProps) {
+export function ReportDialog({ open, onOpenChange, propertyTitle, agentName = "Unknown Agent", agentId }: ReportDialogProps) {
   const [reason, setReason] = useState("");
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const { addReport } = useMockDb();
+  const { user } = useAuth();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +33,15 @@ export function ReportDialog({ open, onOpenChange, propertyTitle }: ReportDialog
     
     // Simulate API call
     setTimeout(() => {
+      addReport({
+        property: propertyTitle,
+        agent: agentName,
+        agentId: agentId,
+        reason: reason,
+        details: details || "No additional details provided.",
+        reporter: user?.name || "Anonymous User"
+      });
+
       setSubmitting(false);
       onOpenChange(false);
       setReason("");
@@ -37,7 +52,7 @@ export function ReportDialog({ open, onOpenChange, propertyTitle }: ReportDialog
         description: "Thank you for helping keep NaijaHomes safe. Our team will review this listing shortly.",
         duration: 5000,
       });
-    }, 1500);
+    }, 1000);
   };
 
   return (
@@ -70,12 +85,12 @@ export function ReportDialog({ open, onOpenChange, propertyTitle }: ReportDialog
                 <SelectValue placeholder="Select a reason" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="scam">Suspected Scam / Fraud</SelectItem>
-                <SelectItem value="unavailable">Property is no longer available</SelectItem>
-                <SelectItem value="fake_photos">Photos are fake or stolen</SelectItem>
-                <SelectItem value="wrong_price">Price is incorrect or misleading</SelectItem>
-                <SelectItem value="unresponsive">Agent is unresponsive or rude</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="Suspected Scam">Suspected Scam / Fraud</SelectItem>
+                <SelectItem value="Unavailable">Property is no longer available</SelectItem>
+                <SelectItem value="Fake Photos">Photos are fake or stolen</SelectItem>
+                <SelectItem value="Wrong Price">Price is incorrect or misleading</SelectItem>
+                <SelectItem value="Unresponsive Agent">Agent is unresponsive or rude</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

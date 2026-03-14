@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MapPin, Bed, Bath, Grid2X2, Phone, Mail, CheckCircle2, ChevronLeft, Share2, Heart, ShieldCheck, Map as MapIcon, Flag, Clock } from "lucide-react";
+import { MapPin, Bed, Bath, Grid2X2, Phone, Mail, CheckCircle2, ChevronLeft, Share2, Heart, ShieldCheck, Map as MapIcon, Flag, Clock, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { ReportDialog } from "@/components/trust/ReportDialog";
@@ -301,6 +301,8 @@ export default function PropertyDetails() {
         open={reportOpen} 
         onOpenChange={setReportOpen} 
         propertyTitle={property.title} 
+        agentName={property.agent.name}
+        agentId={"agent-1"}
       />
     </div>
   );

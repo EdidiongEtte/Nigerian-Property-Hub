@@ -1,28 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { ShieldCheck, Upload, AlertCircle, FileText, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Upload, AlertCircle, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import { Link, useLocation } from "wouter";
+import { useMockDb } from "@/lib/mock-db";
 
 export default function Verification() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { addVerification, getUserVerifications } = useMockDb();
   
   const [step, setStep] = useState(1);
   const [idFile, setIdFile] = useState<File | null>(null);
   const [cacFile, setCacFile] = useState<File | null>(null);
+  const [name, setName] = useState(user?.name || "");
   
   // Status can be 'unverified', 'pending', 'verified', 'rejected'
-  const [status, setStatus] = useState<'unverified' | 'pending' | 'verified'>(
-    user?.type === 'agent' && user.name.includes('Doe') ? 'verified' : 'unverified'
-  );
+  const [status, setStatus] = useState<'unverified' | 'pending' | 'verified' | 'rejected'>('unverified');
+
+  useEffect(() => {
+    if (user) {
+      const userReqs = getUserVerifications(user.id);
+      if (userReqs.length > 0) {
+        setStatus(userReqs[0].status as any);
+      }
+    }
+  }, [user]);
 
   if (!user || (user.type !== 'agent' && user.type !== 'landlord')) {
     setLocation("/");
@@ -35,14 +45,25 @@ export default function Verification() {
     
     // Simulate API delay
     setTimeout(() => {
+      const docs = [];
+      if (idFile) docs.push(idFile.name);
+      if (cacFile) docs.push(cacFile.name);
+
+      addVerification({
+        userId: user.id,
+        name: name,
+        type: user.type,
+        documents: docs,
+      });
+
       setStatus('pending');
       toast({
         title: "Documents Submitted",
-        description: "Your verification request is under review. This usually takes 24-48 hours.",
+        description: "Your verification request has been sent to the admin for review.",
         duration: 5000,
       });
       setLocation("/dashboard");
-    }, 2000);
+    }, 1500);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'id' | 'cac') => {
@@ -76,13 +97,28 @@ export default function Verification() {
               </div>
               <h2 className="text-2xl font-bold text-green-900 mb-2">You are Verified!</h2>
               <p className="text-green-800/80 mb-6 max-w-md">
-                Your account has been successfully verified. The verified badge now appears on all your listings, helping you attract more serious buyers and renters.
+                Your account has been successfully verified by our admin team. The verified badge now appears on all your listings.
               </p>
               <Link href="/dashboard">
                 <Button className="bg-green-600 hover:bg-green-700 font-bold">
                   Go to Dashboard
                 </Button>
               </Link>
+            </CardContent>
+          </Card>
+        ) : status === 'rejected' ? (
+          <Card className="border-red-200 shadow-sm rounded-2xl bg-red-50/50">
+            <CardContent className="pt-6 flex flex-col items-center text-center p-8">
+              <div className="h-20 w-20 rounded-full bg-red-100 flex items-center justify-center mb-6">
+                <XCircle className="h-10 w-10 text-red-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-red-900 mb-2">Verification Rejected</h2>
+              <p className="text-red-800/80 mb-6 max-w-md">
+                Unfortunately, your verification request was rejected. This usually happens if the documents were unclear or did not match your profile details.
+              </p>
+              <Button onClick={() => setStatus('unverified')} className="bg-red-600 hover:bg-red-700 font-bold">
+                Try Again
+              </Button>
             </CardContent>
           </Card>
         ) : status === 'pending' ? (
@@ -93,7 +129,7 @@ export default function Verification() {
               </div>
               <h2 className="text-2xl font-bold text-amber-900 mb-2">Verification Pending</h2>
               <p className="text-amber-800/80 mb-6 max-w-md">
-                We have received your documents and our team is currently reviewing them. We'll notify you once your account is verified. This usually takes 24-48 hours.
+                We have received your documents and our admin team is currently reviewing them. We'll notify you once your account is verified.
               </p>
               <Link href="/dashboard">
                 <Button variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-100 font-bold">
@@ -133,12 +169,8 @@ export default function Verification() {
                     <CardContent className="space-y-4 pt-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Legal First Name</Label>
-                          <Input defaultValue={user.name.split(' ')[0]} required />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Legal Last Name</Label>
-                          <Input defaultValue={user.name.split(' ')[1] || ''} required />
+                          <Label>Legal Full Name</Label>
+                          <Input value={name} onChange={e => setName(e.target.value)} required />
                         </div>
                       </div>
                       <div className="space-y-2">

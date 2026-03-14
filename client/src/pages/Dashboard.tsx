@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { mockProperties } from "@/lib/data/mock-properties";
 import { useAuth } from "@/lib/auth-context";
@@ -23,7 +23,10 @@ import {
   Zap,
   ShieldCheck,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  Bell,
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -36,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useMockDb } from "@/lib/mock-db";
 
 const chartData = [
   { name: 'Mon', views: 120 },
@@ -50,6 +54,16 @@ const chartData = [
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const { user, logout } = useAuth();
+  const { getUserNotifications, markNotificationRead, getUserVerifications } = useMockDb();
+  
+  // Get notifications for this user
+  const notifications = user ? getUserNotifications(user.id) : [];
+  const unreadCount = notifications.filter(n => !n.read).length;
+  
+  // Check verification status
+  const verifications = user ? getUserVerifications(user.id) : [];
+  const verificationStatus = verifications.length > 0 ? verifications[0].status : 'unverified';
+  const isVerified = verificationStatus === 'verified';
   
   // Mock data for the dashboard
   const myProperties = mockProperties.slice(0, 3);
@@ -58,8 +72,6 @@ export default function Dashboard() {
   const activeEnquiries = 8;
   const listingsCount = myProperties.length;
   const maxFreeListings = 3;
-  
-  const isVerified = user?.type === 'agent' && user.name.includes('Doe'); // Mock verification state
   
   const mockEnquiries = [
     { id: 1, name: "Chidi Okafor", property: "Luxury 4 Bedroom Detached Duplex", date: "Today, 10:30 AM", message: "Hi, I am interested in viewing this property this weekend.", unread: true },
@@ -94,6 +106,13 @@ export default function Dashboard() {
           <Badge className="absolute right-4 ml-auto bg-red-500 hover:bg-red-600 rounded-full px-2 py-0.5 text-xs">{activeEnquiries}</Badge>
         </TabsTrigger>
         <TabsTrigger 
+          value="notifications" 
+          className="w-full justify-start px-4 py-3 h-12 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-xl relative"
+        >
+          <Bell className="h-5 w-5 mr-3" /> Notifications
+          {unreadCount > 0 && <Badge className="absolute right-4 ml-auto bg-primary rounded-full px-2 py-0.5 text-xs">{unreadCount}</Badge>}
+        </TabsTrigger>
+        <TabsTrigger 
           value="profile" 
           className="w-full justify-start px-4 py-3 h-12 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-xl"
         >
@@ -101,7 +120,7 @@ export default function Dashboard() {
         </TabsTrigger>
       </TabsList>
       
-      {!isVerified && (
+      {!isVerified && verificationStatus !== 'pending' && (
         <div className="mt-6 mx-4 p-4 bg-amber-50 border border-amber-200 rounded-xl relative overflow-hidden">
           <div className="absolute -right-4 -top-4 opacity-10">
             <ShieldCheck className="h-24 w-24 text-amber-500" />
@@ -223,6 +242,25 @@ export default function Dashboard() {
                 </Button>
               </Link>
             </div>
+            
+            {/* Notifications Alert Banner */}
+            {unreadCount > 0 && (
+              <div 
+                className="bg-primary/5 border border-primary/20 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-primary/10 transition-colors"
+                onClick={() => setActiveTab("notifications")}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                    <Bell className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-primary">You have {unreadCount} unread notification{unreadCount !== 1 && 's'}</h4>
+                    <p className="text-sm text-slate-600">Click to view updates from the admin team.</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" className="text-primary font-medium">View</Button>
+              </div>
+            )}
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -347,7 +385,7 @@ export default function Dashboard() {
                 </Card>
 
                 {/* Verification Status */}
-                {!isVerified ? (
+                {verificationStatus === 'unverified' && (
                   <Card className="border-amber-200 shadow-sm rounded-2xl bg-amber-50">
                     <CardContent className="p-5 flex gap-4">
                       <div className="h-10 w-10 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
@@ -364,7 +402,39 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                ) : (
+                )}
+                {verificationStatus === 'pending' && (
+                  <Card className="border-blue-200 shadow-sm rounded-2xl bg-blue-50">
+                    <CardContent className="p-5 flex gap-4 items-center">
+                      <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                        <ShieldCheck className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-blue-900 text-sm mb-1">Verification Pending</h4>
+                        <p className="text-xs text-blue-800/80">Your ID documents are currently being reviewed by admin.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                {verificationStatus === 'rejected' && (
+                  <Card className="border-red-200 shadow-sm rounded-2xl bg-red-50">
+                    <CardContent className="p-5 flex gap-4 items-center">
+                      <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                        <X className="h-6 w-6 text-red-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-red-900 text-sm mb-1">Verification Rejected</h4>
+                        <p className="text-xs text-red-800/80 mb-2">Please submit clear and valid ID documents.</p>
+                        <Link href="/verification">
+                          <Button size="sm" variant="outline" className="border-red-300 text-red-700 bg-white hover:bg-red-50 h-8">
+                            Try Again
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                {isVerified && (
                   <Card className="border-green-200 shadow-sm rounded-2xl bg-green-50">
                     <CardContent className="p-5 flex gap-4 items-center">
                       <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center shrink-0">
@@ -536,6 +606,56 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* NOTIFICATIONS TAB */}
+          <TabsContent value="notifications" className="m-0 border-0 p-0 animate-in fade-in duration-300">
+            <div className="mb-6">
+              <h1 className="text-2xl font-heading font-bold">Notifications</h1>
+              <p className="text-muted-foreground text-sm">Updates and messages from the admin team</p>
+            </div>
+
+            <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+              <div className="divide-y divide-slate-100">
+                {notifications.map((notif) => (
+                  <div key={notif.id} className={`p-5 flex gap-4 ${!notif.read ? 'bg-primary/5' : ''}`}>
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
+                      notif.type === 'error' ? 'bg-red-100 text-red-600' : 
+                      notif.type === 'warning' ? 'bg-orange-100 text-orange-600' : 
+                      notif.type === 'success' ? 'bg-green-100 text-green-600' : 
+                      'bg-blue-100 text-blue-600'
+                    }`}>
+                      {notif.type === 'error' ? <AlertCircle className="h-5 w-5" /> : 
+                       notif.type === 'warning' ? <AlertTriangle className="h-5 w-5" /> : 
+                       notif.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : 
+                       <Bell className="h-5 w-5" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className={`font-bold ${!notif.read ? 'text-slate-900' : 'text-slate-700'}`}>
+                          {notif.title}
+                          {!notif.read && <span className="ml-2 w-2 h-2 rounded-full bg-primary inline-block"></span>}
+                        </h4>
+                        <span className="text-xs text-slate-500">{new Date(notif.date).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-sm text-slate-600 mb-3">{notif.message}</p>
+                      {!notif.read && (
+                        <Button variant="outline" size="sm" onClick={() => markNotificationRead(notif.id)} className="h-7 text-xs">
+                          Mark as read
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {notifications.length === 0 && (
+                  <div className="p-12 text-center text-slate-500">
+                    <Bell className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-lg font-medium">No Notifications</p>
+                    <p className="text-sm">You're all caught up!</p>
+                  </div>
+                )}
               </div>
             </Card>
           </TabsContent>

@@ -21,6 +21,7 @@ export default function Verification() {
   const [idFile, setIdFile] = useState<File | null>(null);
   const [cacFile, setCacFile] = useState<File | null>(null);
   const [name, setName] = useState(user?.name || "");
+  const [agencyName, setAgencyName] = useState("");
   
   // Status can be 'unverified', 'pending', 'verified', 'rejected'
   const [status, setStatus] = useState<'unverified' | 'pending' | 'verified' | 'rejected'>('unverified');
@@ -52,6 +53,7 @@ export default function Verification() {
       addVerification({
         userId: user.id,
         name: name,
+        agencyName: agencyName,
         type: user.type,
         documents: docs,
       });
@@ -99,11 +101,16 @@ export default function Verification() {
               <p className="text-green-800/80 mb-6 max-w-md">
                 Your account has been successfully verified by our admin team. The verified badge now appears on all your listings.
               </p>
-              <Link href="/dashboard">
-                <Button className="bg-green-600 hover:bg-green-700 font-bold">
-                  Go to Dashboard
+              <div className="flex gap-4">
+                <Button onClick={() => setStatus('unverified')} variant="outline" className="border-green-300 text-green-700 bg-white hover:bg-green-50 font-bold">
+                  Update Verification
                 </Button>
-              </Link>
+                <Link href="/dashboard">
+                  <Button className="bg-green-600 hover:bg-green-700 font-bold">
+                    Go to Dashboard
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         ) : status === 'rejected' ? (
@@ -127,7 +134,7 @@ export default function Verification() {
               <div className="h-20 w-20 rounded-full bg-amber-100 flex items-center justify-center mb-6">
                 <AlertCircle className="h-10 w-10 text-amber-600" />
               </div>
-              <h2 className="text-2xl font-bold text-amber-900 mb-2">Verification Pending</h2>
+              <h2 className="text-2xl font-bold text-amber-900 mb-2">Under Review</h2>
               <p className="text-amber-800/80 mb-6 max-w-md">
                 We have received your documents and our admin team is currently reviewing them. We'll notify you once your account is verified.
               </p>
@@ -180,7 +187,11 @@ export default function Verification() {
                       </div>
                       <div className="space-y-2">
                         <Label>Registered Agency Name (If applicable)</Label>
-                        <Input placeholder="e.g. Adeola Properties Ltd" />
+                        <Input 
+                          placeholder="e.g. Adeola Properties Ltd" 
+                          value={agencyName}
+                          onChange={e => setAgencyName(e.target.value)}
+                        />
                       </div>
                     </CardContent>
                     <CardFooter className="bg-slate-50 border-t border-slate-100 pt-6 flex justify-end">

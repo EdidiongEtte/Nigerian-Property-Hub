@@ -17,6 +17,7 @@ export interface VerificationRequest {
   id: string;
   userId: string;
   name: string;
+  agencyName?: string;
   type: string;
   documents: string[];
   status: 'pending' | 'verified' | 'rejected';

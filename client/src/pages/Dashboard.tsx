@@ -410,8 +410,8 @@ export default function Dashboard() {
                         <ShieldCheck className="h-6 w-6 text-blue-600" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-blue-900 text-sm mb-1">Verification Pending</h4>
-                        <p className="text-xs text-blue-800/80">Your ID documents are currently being reviewed by admin.</p>
+                        <h4 className="font-bold text-blue-900 text-sm mb-1">Under Review</h4>
+                        <p className="text-xs text-blue-800/80">Your documents are currently under review by admin.</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -696,8 +696,20 @@ export default function Dashboard() {
                         <Input defaultValue="08012345678" type="tel" />
                       </div>
                       <div className="space-y-2">
-                        <Label>Agency Name (Optional)</Label>
-                        <Input defaultValue="Properties Ltd" />
+                        <div className="flex items-center justify-between">
+                          <Label>Agency Name</Label>
+                          {isVerified && <Badge variant="secondary" className="text-[10px] h-4">Verified</Badge>}
+                        </div>
+                        <Input 
+                          defaultValue={verifications.length > 0 && verifications[0].agencyName ? verifications[0].agencyName : "Properties Ltd"} 
+                          disabled={isVerified || verificationStatus === 'pending'} 
+                          title={(isVerified || verificationStatus === 'pending') ? "Agency names cannot be changed directly while verified or under review" : ""}
+                        />
+                        {(isVerified || verificationStatus === 'pending') && (
+                          <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" /> To change agency name, <Link href="/verification"><span className="underline cursor-pointer">submit new documents</span></Link>
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Button className="mt-4 font-bold shadow-sm">Save Changes</Button>

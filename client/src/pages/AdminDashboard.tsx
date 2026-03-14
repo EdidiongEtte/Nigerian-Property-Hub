@@ -418,11 +418,16 @@ export default function AdminDashboard() {
                     <tbody className="divide-y divide-slate-100">
                       {verifications.map(v => (
                         <tr key={v.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4 font-semibold text-slate-900 flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="bg-slate-200">{v.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            {v.name}
+                          <td className="px-6 py-4 font-semibold text-slate-900">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback className="bg-slate-200">{v.name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div>{v.name}</div>
+                                {v.agencyName && <div className="text-xs text-slate-500 font-normal">Agency: {v.agencyName}</div>}
+                              </div>
+                            </div>
                           </td>
                           <td className="px-6 py-4">
                             <Badge variant="outline">{v.type}</Badge>

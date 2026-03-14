@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Menu, Search, UserCircle, PlusCircle, Building, Heart, MessageSquare } from "lucide-react";
+import { Menu, Search, UserCircle, PlusCircle, Building, Heart, MessageSquare, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -32,7 +32,7 @@ export default function Header() {
             <Link href="/" className="hover:text-primary transition-colors">For Sale</Link>
             <Link href="/" className="hover:text-primary transition-colors">To Rent</Link>
             <Link href="/" className="hover:text-primary transition-colors">Commercial</Link>
-            <Link href="/" className="hover:text-primary transition-colors">Agents</Link>
+            <Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-1 text-red-600 font-semibold"><ShieldAlert className="h-4 w-4" />Admin</Link>
           </nav>
         </div>
 

@@ -34,6 +34,17 @@ export interface Notification {
   date: string;
 }
 
+export interface SavedSearch {
+  id: string;
+  userId: string;
+  purpose: string;
+  city: string;
+  area: string;
+  type: string;
+  maxPrice: string;
+  date: string;
+}
+
 // Initial Mock Data
 const defaultReports: Report[] = [
   { id: "R1", property: "3 Bedroom Flat in Ikeja", agent: "John Doe", reason: "Suspected Scam", details: "Asked for inspection fee before viewing.", status: "open", date: new Date().toISOString(), reporter: "Anonymous" }
@@ -41,6 +52,7 @@ const defaultReports: Report[] = [
 
 const defaultVerifications: VerificationRequest[] = [];
 const defaultNotifications: Notification[] = [];
+const defaultSavedSearches: SavedSearch[] = [];
 
 // Helper to get from local storage
 const getFromStorage = <T>(key: string, defaultData: T): T => {
@@ -62,12 +74,14 @@ export const useMockDb = () => {
   const [reports, setReports] = useState<Report[]>(() => getFromStorage('reports', defaultReports));
   const [verifications, setVerifications] = useState<VerificationRequest[]>(() => getFromStorage('verifications', defaultVerifications));
   const [notifications, setNotifications] = useState<Notification[]>(() => getFromStorage('notifications', defaultNotifications));
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(() => getFromStorage('saved_searches', defaultSavedSearches));
 
   useEffect(() => {
     const handleStorageUpdate = () => {
       setReports(getFromStorage('reports', defaultReports));
       setVerifications(getFromStorage('verifications', defaultVerifications));
       setNotifications(getFromStorage('notifications', defaultNotifications));
+      setSavedSearches(getFromStorage('saved_searches', defaultSavedSearches));
     };
 
     window.addEventListener('storage_updated', handleStorageUpdate);
@@ -131,20 +145,42 @@ export const useMockDb = () => {
     saveToStorage('notifications', updated);
   };
 
+  const addSavedSearch = (search: Omit<SavedSearch, 'id' | 'date'>) => {
+    const newSearch: SavedSearch = {
+      ...search,
+      id: `S${Date.now()}`,
+      date: new Date().toISOString()
+    };
+    const updated = [newSearch, ...savedSearches];
+    setSavedSearches(updated);
+    saveToStorage('saved_searches', updated);
+  };
+
+  const deleteSavedSearch = (id: string) => {
+    const updated = savedSearches.filter(s => s.id !== id);
+    setSavedSearches(updated);
+    saveToStorage('saved_searches', updated);
+  };
+
   const getUserVerifications = (userId: string) => verifications.filter(v => v.userId === userId);
   const getUserNotifications = (userId: string) => notifications.filter(n => n.userId === userId);
+  const getUserSavedSearches = (userId: string) => savedSearches.filter(s => s.userId === userId);
 
   return {
     reports,
     verifications,
     notifications,
+    savedSearches,
     addReport,
     updateReportStatus,
     addVerification,
     updateVerificationStatus,
     addNotification,
     markNotificationRead,
+    addSavedSearch,
+    deleteSavedSearch,
     getUserVerifications,
-    getUserNotifications
+    getUserNotifications,
+    getUserSavedSearches
   };
 };

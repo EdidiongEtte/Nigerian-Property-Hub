@@ -1,27 +1,67 @@
-import { Search, MapPin, Home, SlidersHorizontal, Map as MapIcon } from "lucide-react";
+import { Search, MapPin, Home, SlidersHorizontal, Map as MapIcon, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { cityAreas } from "@/lib/data/locations";
+import { useToast } from "@/hooks/use-toast";
+import { useMockDb } from "@/lib/mock-db";
+import { useAuth } from "@/lib/auth-context";
 
 export default function SearchBar() {
   const [city, setCity] = useState<string>("all");
   const [area, setArea] = useState<string>("all");
+  const [type, setType] = useState<string>("all");
+  const [maxPrice, setMaxPrice] = useState<string>("any");
+  const [purpose, setPurpose] = useState<string>("buy");
+
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const { addSavedSearch } = useMockDb();
 
   const availableAreas = city !== "all" && cityAreas[city] ? cityAreas[city] : [];
 
+  const handleSaveSearch = () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save search alerts.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    addSavedSearch({
+      userId: user.id,
+      purpose,
+      city,
+      area,
+      type,
+      maxPrice
+    });
+
+    toast({
+      title: "Search Alert Saved!",
+      description: "We'll notify you when new properties match these criteria.",
+    });
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-2 max-w-5xl mx-auto w-full backdrop-blur-md">
-      <Tabs defaultValue="buy" className="w-full">
+      <Tabs value={purpose} onValueChange={setPurpose} className="w-full">
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-4 px-2 pt-2">
           <TabsList className="grid w-full sm:w-[240px] grid-cols-2">
             <TabsTrigger value="buy" className="font-semibold">Buy</TabsTrigger>
             <TabsTrigger value="rent" className="font-semibold">Rent</TabsTrigger>
           </TabsList>
-          <Button variant="ghost" size="sm" className="hidden sm:flex text-primary hover:text-primary hover:bg-primary/5 font-semibold gap-2">
-            <MapIcon className="h-4 w-4" /> View on Map
-          </Button>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+            <Button variant="ghost" size="sm" onClick={handleSaveSearch} className="text-primary hover:text-primary hover:bg-primary/5 font-semibold gap-2">
+              <Bell className="h-4 w-4" /> Save Search Alert
+            </Button>
+            <Button variant="ghost" size="sm" className="hidden sm:flex text-primary hover:text-primary hover:bg-primary/5 font-semibold gap-2">
+              <MapIcon className="h-4 w-4" /> View on Map
+            </Button>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto_auto_auto] gap-2">
@@ -59,7 +99,7 @@ export default function SearchBar() {
           </Select>
           
           {/* Property Type */}
-          <Select>
+          <Select value={type} onValueChange={setType}>
             <SelectTrigger className="h-14 w-full md:w-[150px] border-slate-200 bg-slate-50 hover:bg-slate-100/50 text-base rounded-xl transition-colors">
               <div className="flex items-center gap-2">
                 <Home className="h-4 w-4 text-muted-foreground" />
@@ -76,7 +116,7 @@ export default function SearchBar() {
           </Select>
 
           {/* Price */}
-          <Select>
+          <Select value={maxPrice} onValueChange={setMaxPrice}>
             <SelectTrigger className="h-14 w-full md:w-[130px] border-slate-200 bg-slate-50 hover:bg-slate-100/50 text-base rounded-xl transition-colors">
               <div className="flex items-center gap-2">
                 <SelectValue placeholder="Max Price" />

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { mockProperties } from "@/lib/data/mock-properties";
 import { useAuth } from "@/lib/auth-context";
+import { useMockDb } from "@/lib/mock-db";
 import { 
   Building, 
   Heart, 
@@ -13,10 +14,14 @@ import {
   Clock,
   Menu,
   ChevronRight,
-  Lock
+  Lock,
+  Trash2,
+  MapPin,
+  Home as HomeIcon,
+  Filter
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -26,12 +31,16 @@ import { Badge } from "@/components/ui/badge";
 import PropertyCard from "@/components/property/PropertyCard";
 
 export default function UserDashboard() {
-  const [activeTab, setActiveTab] = useState("saved");
+  const [activeTab, setActiveTab] = useState("searches");
   const [, setLocation] = useLocation();
   const { user, logout, savedPropertyIds } = useAuth();
+  const { getUserSavedSearches, deleteSavedSearch } = useMockDb();
   
   // Real saved properties from context
   const savedProperties = mockProperties.filter(p => savedPropertyIds.includes(p.id));
+  
+  // Real saved searches from mock-db
+  const savedSearches = user ? getUserSavedSearches(user.id) : [];
   
   // Mock data
   const recentSearches = [
@@ -68,7 +77,7 @@ export default function UserDashboard() {
           value="searches" 
           className="w-full justify-start px-4 py-3 h-12 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-xl"
         >
-          <Clock className="h-5 w-5 mr-3" /> Recent Searches
+          <Bell className="h-5 w-5 mr-3" /> Search Alerts
         </TabsTrigger>
         <TabsTrigger 
           value="enquiries" 
@@ -208,29 +217,45 @@ export default function UserDashboard() {
 
           <TabsContent value="searches" className="m-0 border-0 p-0 animate-in fade-in duration-300">
             <div className="mb-6">
-              <h1 className="text-2xl font-heading font-bold">Recent Searches</h1>
-              <p className="text-muted-foreground text-sm">Pick up where you left off</p>
+              <h1 className="text-2xl font-heading font-bold">Search Alerts</h1>
+              <p className="text-muted-foreground text-sm">We'll notify you when properties match these criteria</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {recentSearches.map((search) => (
-                <Link key={search.id} href={search.link}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer border-slate-200">
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                          <Search className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold">{search.query}</h4>
-                          <p className="text-xs text-muted-foreground">{search.time}</p>
-                        </div>
+              {savedSearches.length > 0 ? savedSearches.map((search) => (
+                <Card key={search.id} className="hover:shadow-md transition-shadow border-slate-200">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <Bell className="h-5 w-5" />
                       </div>
-                      <ChevronRight className="h-5 w-5 text-slate-400" />
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+                      <div>
+                        <h4 className="font-semibold capitalize">
+                           {search.purpose === 'buy' ? 'For Sale' : 'For Rent'} • {search.type !== 'all' ? search.type : 'Any Property'}
+                        </h4>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <MapPin className="h-3 w-3" /> {search.area !== 'all' ? search.area : 'Any Area'}, {search.city !== 'all' ? search.city : 'Any City'}
+                        </p>
+                        {search.maxPrice !== 'any' && (
+                          <p className="text-xs text-primary font-medium mt-1">Max: ₦{search.maxPrice}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-red-600 hover:bg-red-50" onClick={(e) => { e.preventDefault(); deleteSavedSearch(search.id); }}>
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              )) : (
+                <div className="col-span-1 md:col-span-2 text-center p-12 border-2 border-dashed border-slate-200 rounded-2xl bg-transparent">
+                  <Bell className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                  <h3 className="font-bold text-lg mb-2">No active search alerts</h3>
+                  <p className="text-muted-foreground mb-6">Set up alerts to get notified when new properties match your criteria.</p>
+                  <Link href="/">
+                    <Button>Create Alert</Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </TabsContent>
 
